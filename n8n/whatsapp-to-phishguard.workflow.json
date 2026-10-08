@@ -3,22 +3,20 @@
   "nodes": [
     {
       "parameters": {
-        "httpMethod": "POST",
-        "path": "phishguard-whatsapp",
-        "responseMode": "onReceived",
+        "updates": ["messages"],
         "options": {}
       },
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2,
+      "type": "n8n-nodes-base.whatsAppTrigger",
+      "typeVersion": 1,
       "position": [240, 300],
       "id": "9629e47c-8837-4a68-9d2c-5b09ec5d4bca",
-      "name": "WhatsApp Webhook",
+      "name": "WhatsApp Trigger",
       "webhookId": "a4f175c7-34bf-4c18-9d0a-86430e3b191c"
     },
     {
       "parameters": {
         "mode": "runOnceForAllItems",
-        "jsCode": "const root = $input.first().json.body ?? $input.first().json;\nconst output = [];\nfor (const entry of root.entry ?? []) {\n  for (const change of entry.changes ?? []) {\n    const value = change.value ?? {};\n    const phoneNumberId = value.metadata?.phone_number_id ?? '';\n    for (const message of value.messages ?? []) {\n      if (message.type !== 'text' || !message.from || !message.text?.body) continue;\n      output.push({ json: { sender: message.from, text: message.text.body, message_id: message.id ?? '', phone_number_id: phoneNumberId } });\n    }\n  }\n}\nreturn output;"
+        "jsCode": "const output = [];\nfor (const item of $input.all()) {\n  const root = item.json.body ?? item.json;\n  const batches = [];\n  for (const entry of root.entry ?? []) {\n    for (const change of entry.changes ?? []) batches.push(change.value ?? {});\n  }\n  if (!batches.length) batches.push(root.value ?? root);\n  for (const batch of batches) {\n    const phoneNumberId = batch.metadata?.phone_number_id ?? root.metadata?.phone_number_id ?? '';\n    for (const message of batch.messages ?? []) {\n      if (message.type !== 'text' || !message.from || !message.text?.body) continue;\n      output.push({ json: { sender: message.from, text: message.text.body, message_id: message.id ?? '', phone_number_id: phoneNumberId } });\n    }\n  }\n}\nreturn output;"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -78,7 +76,7 @@
     }
   ],
   "connections": {
-    "WhatsApp Webhook": {
+    "WhatsApp Trigger": {
       "main": [[{ "node": "Normalize Incoming Message", "type": "main", "index": 0 }]]
     },
     "Normalize Incoming Message": {

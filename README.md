@@ -18,7 +18,7 @@ The API listens on port 7779 by default. Set `PORT` and `SQLITE_PATH` to change 
 - `GET` and `POST /webhook/whatsapp`; POST acknowledges quickly, deduplicates inbound message IDs, and records `sent`, `delivered`, `read`, and `failed` status callbacks.
 - `POST /n8n/whatsapp` with `{ "sender": "...", "text": "...", "message_id": "..." }` and `X-N8N-Secret`; returns a `reply` string for n8n to send back to the sender.
 
-The OpenAPI request/response contract is in `n8n/whatsapp-api.openapi.json`. An importable n8n workflow is in `n8n/whatsapp-to-phishguard.workflow.json`; import it, replace the Node API URL if n8n is on another host, then replace the two credential placeholders. The workflow acknowledges the incoming webhook, maps the text sender, calls the Node API, and sends the returned reply through WhatsApp Cloud API. Use the Node API's reachable host in n8n; `localhost` only works if n8n runs on the same host/network namespace.
+The OpenAPI request/response contract is in `n8n/whatsapp-api.openapi.json`. An importable n8n workflow is in `n8n/whatsapp-to-phishguard.workflow.json`; import it, select your WhatsApp Trigger OAuth credential, replace the Node API URL if n8n is on another host, and replace the two HTTP credential placeholders. The workflow's WhatsApp Trigger receives Meta message events, maps the text sender, calls the Node API, and sends the returned reply through WhatsApp Cloud API. Use the Node API's reachable host in n8n; `localhost` only works if n8n runs on the same host/network namespace.
 
 PM2 configuration is in `ecosystem.config.cjs`; use `npm run pm2:start`, `npm run pm2:restart`, and `npm run pm2:stop`. Keep `.env` private and out of Git.
 
