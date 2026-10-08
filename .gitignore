@@ -1,0 +1,8 @@
+node_modules/
+.pm2/
+.env
+data/
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+npm-debug.log*

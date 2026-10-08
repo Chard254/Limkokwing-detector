@@ -1,0 +1,30 @@
+{
+  "name": "phishguard-node-api",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "pm2:start": "node scripts/pm2.cjs start ecosystem.config.cjs",
+    "pm2:restart": "node scripts/pm2.cjs restart phishguard-node-api",
+    "pm2:stop": "node scripts/pm2.cjs stop phishguard-node-api",
+    "pm2:status": "node scripts/pm2.cjs status",
+    "test": "node test/all.test.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "Node.js and Express API for PhishGuard",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "dotenv": "^16.4.7",
+    "express": "^5.1.0",
+    "groq-sdk": "^0.33.0",
+    "jsonwebtoken": "^9.0.2",
+    "pm2": "^6.0.14"
+  }
+}

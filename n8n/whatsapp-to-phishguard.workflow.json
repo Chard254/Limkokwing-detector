@@ -1,0 +1,100 @@
+{
+  "name": "WhatsApp to PhishGuard Node API",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "phishguard-whatsapp",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "id": "9629e47c-8837-4a68-9d2c-5b09ec5d4bca",
+      "name": "WhatsApp Webhook",
+      "webhookId": "a4f175c7-34bf-4c18-9d0a-86430e3b191c"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const root = $input.first().json.body ?? $input.first().json;\nconst output = [];\nfor (const entry of root.entry ?? []) {\n  for (const change of entry.changes ?? []) {\n    const value = change.value ?? {};\n    const phoneNumberId = value.metadata?.phone_number_id ?? '';\n    for (const message of value.messages ?? []) {\n      if (message.type !== 'text' || !message.from || !message.text?.body) continue;\n      output.push({ json: { sender: message.from, text: message.text.body, message_id: message.id ?? '', phone_number_id: phoneNumberId } });\n    }\n  }\n}\nreturn output;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300],
+      "id": "533477b9-ae35-4376-99ba-313b40f07288",
+      "name": "Normalize Incoming Message"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:7779/n8n/whatsapp",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-N8N-Secret",
+              "value": "REPLACE_WITH_N8N_WEBHOOK_SECRET"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({ sender: $('Normalize Incoming Message').item.json.sender, text: $('Normalize Incoming Message').item.json.text, message_id: $('Normalize Incoming Message').item.json.message_id }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [700, 300],
+      "id": "08f88528-598b-46c0-aeb7-57424cb963ce",
+      "name": "Get PhishGuard Reply"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v20.0/{{$('Normalize Incoming Message').item.json.phone_number_id}}/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer REPLACE_WITH_WHATSAPP_PERMANENT_TOKEN"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({ messaging_product: 'whatsapp', to: $('Normalize Incoming Message').item.json.sender, type: 'text', text: { body: $json.reply, preview_url: false } }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [940, 300],
+      "id": "1dd7ab9a-53f5-47e8-94bf-42505977fe9a",
+      "name": "Send WhatsApp Reply"
+    }
+  ],
+  "connections": {
+    "WhatsApp Webhook": {
+      "main": [[{ "node": "Normalize Incoming Message", "type": "main", "index": 0 }]]
+    },
+    "Normalize Incoming Message": {
+      "main": [[{ "node": "Get PhishGuard Reply", "type": "main", "index": 0 }]]
+    },
+    "Get PhishGuard Reply": {
+      "main": [[{ "node": "Send WhatsApp Reply", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "59aa1650-5769-4c4d-b6db-62c52f763330",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}

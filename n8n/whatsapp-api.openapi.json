@@ -1,0 +1,71 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "PhishGuard WhatsApp Message API",
+    "version": "1.0.0",
+    "description": "Accepts a WhatsApp sender and text from n8n, processes the message, and returns the reply for n8n to send back through WhatsApp."
+  },
+  "servers": [
+    { "url": "http://localhost:7779", "description": "Local Node API; replace host with the address reachable from n8n" }
+  ],
+  "paths": {
+    "/n8n/whatsapp": {
+      "post": {
+        "operationId": "processWhatsAppMessage",
+        "summary": "Process an inbound WhatsApp message",
+        "security": [{ "N8NSecret": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/WhatsAppMessageRequest" },
+              "example": { "sender": "256755297667", "text": "Is this link safe? https://example.com" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Message processed; n8n should send the returned reply to the sender.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WhatsAppMessageResponse" },
+              "example": { "success": true, "status": "processed", "sender": "256755297667", "reply": "PhishGuard response text", "message_id": "wamid.example" }
+              }
+            }
+          },
+          "400": { "description": "Sender or text is missing." },
+          "401": { "description": "X-N8N-Secret is missing or does not match N8N_WEBHOOK_SECRET." },
+          "500": { "description": "Message processing failed." }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "N8NSecret": { "type": "apiKey", "in": "header", "name": "X-N8N-Secret" }
+    },
+    "schemas": {
+      "WhatsAppMessageRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["sender", "text"],
+        "properties": {
+          "sender": { "type": "string", "minLength": 1, "description": "WhatsApp sender ID in international format, preferably digits only.", "examples": ["256755297667"] },
+          "text": { "type": "string", "minLength": 1, "description": "Inbound WhatsApp text body." },
+          "message_id": { "type": "string", "description": "Optional inbound WhatsApp message ID for n8n tracking." }
+        }
+      },
+      "WhatsAppMessageResponse": {
+        "type": "object",
+        "required": ["success", "status", "sender", "reply"],
+        "properties": {
+          "success": { "const": true },
+          "status": { "const": "processed" },
+          "sender": { "type": "string" },
+          "reply": { "type": "string", "description": "Text for n8n to send back to the WhatsApp sender." },
+          "message_id": { "type": "string", "description": "The optional message_id value forwarded from the request." }
+        }
+      }
+    }
+  }
+}
