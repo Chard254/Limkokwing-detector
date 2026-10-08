@@ -37,7 +37,7 @@ router = APIRouter()
 
 VERIFY_TOKEN = os.getenv(
     "WHATSAPP_VERIFY_TOKEN",
-    "phishguard123",
+    "EAAJ6u6ASzl4BPI25Moh7ylCcPTEfMBqCbU0ZAMpenjQWeqAueE4RUvGtlFrViPUV0pf84eDdCxHZBYWhxD6WWl64uFfZAYvu7VJfXcCyvDDQwmRtqAadv5bPx40ZCgZBh81nFCcbfIaxBsZAYvZCbsMrjoO3aJhaomMZAGEuA4n8CotdCQOiWpBSnoG1wwWlzZA8oOk604J2mmvldaqZBSS6gSsONMQzpGw030uVfgd13SxZCcLWAZDZD",
 )
 
 
