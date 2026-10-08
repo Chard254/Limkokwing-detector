@@ -391,3 +391,95 @@ You can:
             "detail": str(e)
 
         }
+
+    
+# ==========================================================
+# n8n WhatsApp Integration
+# ==========================================================
+
+import secrets
+
+from fastapi import Header
+from pydantic import BaseModel
+
+
+class N8NWhatsAppMessage(BaseModel):
+    sender: str
+    text: str
+    message_id: str | None = None
+
+
+@router.post("/n8n/whatsapp")
+def receive_n8n_message(
+    payload: N8NWhatsAppMessage,
+    db: Session = Depends(get_db),
+    x_n8n_secret: str | None = Header(default=None),
+):
+    expected_secret = os.getenv("N8N_WEBHOOK_SECRET")
+
+    if (
+        not expected_secret
+        or not x_n8n_secret
+        or not secrets.compare_digest(
+            x_n8n_secret, expected_secret
+        )
+    ):
+        raise HTTPException(
+            status_code=401,
+            detail="Unauthorized",
+        )
+
+    sender = payload.sender.strip()
+    text = payload.text.strip()
+
+    if not sender or not text:
+        raise HTTPException(
+            status_code=400,
+            detail="Sender and text are required",
+        )
+
+    try:
+        reply = ConversationService.process_message(
+            db,
+            sender,
+            text,
+        )
+
+        send_result = send_whatsapp_message(
+            sender,
+            reply,
+        )
+
+        if (
+            not isinstance(send_result, dict)
+            or "error" in send_result
+            or (
+                isinstance(send_result.get("status"), int)
+                and send_result["status"] >= 400
+            )
+        ):
+            logger.error(
+                "WhatsApp delivery failed: %s",
+                send_result,
+            )
+            raise HTTPException(
+                status_code=502,
+                detail="WhatsApp reply delivery failed",
+            )
+
+        return {
+            "success": True,
+            "status": "processed",
+            "reply_sent": True,
+        }
+
+    except HTTPException:
+        raise
+
+    except Exception:
+        logger.exception("n8n processing failed")
+        db.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail="Message processing failed",
+        )

@@ -413,7 +413,7 @@ Advice:
 
 Reply:
 
-1️⃣ Explain this result
+1️⃣ Enter your link to be scanned
 2️⃣ What is phishing?
 3️⃣ How do I protect myself?
 4️⃣ WhatsApp scams
